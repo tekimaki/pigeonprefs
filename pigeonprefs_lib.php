@@ -24,6 +24,7 @@ function pigeonprefs_content_edit( $pObject=NULL ) {
 				$hash = array();
 				$hash['children_of_content_id'] = $cid;
 				$hash['truncate'] = ( $gBitSystem->isFeatureActive( 'pigeonholes_use_jstab' ) ? FALSE : 100 );
+				$hash['content_id'] = $pObject->mContentId;
 				$pigeonOptions[$cid] = pigeonprefs_get_pathlist( $hash ); 
 				$pigeonOptionsLabels[$cid] = $gBitSystem->mDb->getOne( "SELECT title FROM liberty_content WHERE content_id = ?", array( $cid ) ); 
 			}
@@ -114,9 +115,9 @@ function pigeonprefs_get_pathlist( $pParamHash ){
 	global $gBitSystem;
 	$where = $join = ''; $bindVars = array();
 
-	$pContentId = !empty( $pParamHashp['content_id'] ) ? $pParamHashp['content_id'] : NULL;
-	$pTruncate = !empty( $pParamHashp['truncate'] ) ? $pParamHashp['truncate'] : FALSE;
-	$pShowAll = !empty( $pParamHashp['showall'] ) ? $pParamHashp['showall'] : FALSE;
+	$pContentId = !empty( $pParamHash['content_id'] ) ? $pParamHash['content_id'] : NULL;
+	$pTruncate = !empty( $pParamHash['truncate'] ) ? $pParamHash['truncate'] : FALSE;
+	$pShowAll = !empty( $pParamHash['showall'] ) ? $pParamHash['showall'] : FALSE;
 
 	if( $gBitSystem->isFeatureActive( 'pigeonholes_allow_forbid_insertion' ) && !$pShowAll ) {
 		$where .= empty( $where ) ? ' WHERE ' : ' AND ';
@@ -156,23 +157,25 @@ function pigeonprefs_get_pathlist( $pParamHash ){
 						$limit = $pTruncate;
 					} elseif( $pos == $count - 1 ) {
 							$limit = ceil( $pTruncate / 2 );
-						} else {
-							$limit = ceil( $pTruncate / 2 / $count );
-						}
-						$ret[$cid][$pos]['title'] = substr( $pig['title'], 0, $limit ).( ( strlen( $pig['title'] ) <= $limit ) ? '' : '...' );
+					} else {
+						$limit = ceil( $pTruncate / 2 / $count );
 					}
-				}
-			}
-
-			// sort the pathlist to make the display nicer
-			uasort( $ret, 'pigeonholes_pathlist_sorter' );
-
-			if( @BitBase::verifyId( $pContentId ) && $assigned = $this->getPigeonholesFromContentId( $pContentId ) ) {
-				foreach( $assigned as $a ) {
-					$ret[$a['content_id']][0]['selected'] = TRUE;
+					$ret[$cid][$pos]['title'] = substr( $pig['title'], 0, $limit ).( ( strlen( $pig['title'] ) <= $limit ) ? '' : '...' );
 				}
 			}
 		}
+
+		// sort the pathlist to make the display nicer
+		uasort( $ret, 'pigeonholes_pathlist_sorter' );
+
+		if( @BitBase::verifyId( $pContentId ) && $assigned = $Pig->getPigeonholesFromContentId( $pContentId ) ) {
+			foreach( $assigned as $a ) {
+				if( !empty( $ret[$a['content_id']] ) ){
+					$ret[$a['content_id']]['selected'] = TRUE;
+				}
+			}
+		}
+	}
 
 	return( !empty( $ret ) ? $ret : array() );
 }
