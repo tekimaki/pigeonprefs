@@ -18,7 +18,7 @@ function pigeonprefs_content_edit( $pObject=NULL ) {
 		// get list of services for content type
 		foreach( $lcconfig->getAllConfig( $pObject->mContentTypeGuid ) as $config=>$value ){
 			if( strpos( $config, 'service_pigeon_content_id' ) !== false  && $value != 'n' ){
-				$cid = preg_replace( '/_/', '', substr( $config, -2 ) );
+				$cid = substr( $config, strrpos( $config, '_' )+1 );
 
 				// get pigeonholes path list
 				$hash = array();
